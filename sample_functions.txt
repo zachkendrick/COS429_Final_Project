@@ -1,0 +1,105 @@
+'''
+TAKE FROM THESE FUNCTIONS AT WILL BUT BEWARE THAT 
+THEY ARE NOT WELL WRITTEN OR WELL DOCUMENTED!!!
+'''
+
+
+# finds the largest contour by area from a set of contours
+def get_largest_contour(contours):
+    # get largest contour by area
+    max_area=0
+    ci=0
+    for i in range(len(contours)):
+            cnt=contours[i]
+            area = cv2.contourArea(cnt)
+            if(area>max_area):
+                max_area=area
+                ci=i
+    return contours[ci]
+
+
+# find the defects in the convex hull
+def find_convexhull_defects(cnt, hull, center, palmRadius, img):
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    defects = cv2.convexityDefects(cnt,hull)
+
+    if defects is None: return
+    numFingers = 0
+    minRadius = (0, 0)
+    maxArea = 0
+    fingerCount = 0
+    thumb = 0
+
+    for i in range(defects.shape[0]):
+        s,e,f,dist = defects[i,0]
+        start = tuple(cnt[s][0])
+        end = tuple(cnt[e][0])
+        far = tuple(cnt[f][0])
+
+        # constraints
+        finger = np.linalg.norm(np.array(start[0], start[1])-np.array((end[0], end[1])))
+        inPoly = cv2.pointPolygonTest(cnt,center,True)
+        cv2.line(img,start,end,[0,255,0],2)
+
+        del_hand = math.hypot(center[0] - far[0], center[1] - far[1])
+        
+        # draw defects
+        if inPoly and dist > 10000 and dist < 45000 and int(finger) < 5*palmRadius:
+            fingerCount+=1
+            numFingers+=1
+            cv2.circle(img,far,5,[0,0,255],-1)
+            cv2.circle(img,start,5,[0,255,0],-1)
+
+            # find largest triangle area to find thumb
+            area = triArea(start, end, far)
+            if maxArea<area: 
+                maxArea = area
+                thumb = fingerCount   
+
+    # passenger or driver based on thumb
+    if thumb == fingerCount: 
+        cv2.putText(img, "Passenger", (10,150), font, 1,(255,0,0), 2)
+    elif thumb == 1:
+        cv2.putText(img, "Driver", (10,150), font, 1,(255,0,0), 2)
+    sys.stdout.flush()
+
+
+    # display gesture count
+    if numFingers > 5: numFingers = 5
+    cv2.putText(img, str(numFingers+1), (10,50), font, 1,(255,0,0), 2)
+
+
+# Credit for this algorithm goes to the paper which can be found at the
+# description in this link: https://www.youtube.com/watch?v=xML2S6bvMwI
+def centerOfPalm(cnt):
+    scaleFactor = 0.3
+    shrunk = np.array(cnt * scaleFactor, dtype=np.int32)
+    tx, ty, w, h = cv2.boundingRect(shrunk)
+    maxPoint = None
+    maxRadius = 0
+    for x in xrange(w):
+        for y in xrange(h):
+            rad = cv2.pointPolygonTest(shrunk, (tx + x, ty + y), True)
+            if rad > maxRadius:
+                maxPoint = (tx + x, ty + y)
+                maxRadius = rad
+    if maxPoint is None: return
+    realCenter = np.array(np.array(maxPoint) / scaleFactor, dtype=np.int32)
+    error = int((1 / scaleFactor) * 1.5)
+    maxPoint = None
+    maxRadius = 0
+    for x in xrange(realCenter[0] - error, realCenter[0] + error):
+        for y in xrange(realCenter[1] - error, realCenter[1] + error):
+            rad = cv2.pointPolygonTest(cnt, (x, y), True)
+            if rad > maxRadius:
+                maxPoint = (x, y)
+                maxRadius = rad
+    return maxPoint
+
+# finds radius of palm used to zoom in and out 
+def zoomInOut(cnt, center, img):
+    palmRadius = cv2.pointPolygonTest(cnt, center, True)
+    cv2.circle(img, center, int(palmRadius), [0,0,255], 2)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    cv2.putText(img, 'Radius: {0}'.format(str(int(palmRadius))), (10,100), font, 1, (255,0,0), 2)
+    return palmRadius
