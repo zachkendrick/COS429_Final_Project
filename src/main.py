@@ -47,10 +47,11 @@ option = int(raw_input("What skin segmentation algorithm would you like to use?\
 while(True):
     # Capture frame-by-frameqq
     ret, BGR_frame = cap.read()
+    BGR_frame = cv2.flip(BGR_frame,1) #vertical flip
 
     # thresholding to find hand
     if option == 1:
-        BGR_frame = pre.deNoise(BGR_frame)
+        BGR_frame = pre.deNoise(BGR_frame)        
         gray_frame = pre.im2Gray(BGR_frame)
         skinMask = pre.thresholdHand(gray_frame)
 
