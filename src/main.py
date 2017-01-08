@@ -26,6 +26,8 @@ from Preprocess import Preprocess as pre
 from Hand import Hand as hand
 import sys
 
+from Axis import Axis
+import time
 
 # USB port or file name
 PORT_NUMBER = 0
@@ -44,6 +46,11 @@ out = cv2.VideoWriter('COS429.avi',fourcc, 20.0, (640,480))
 # Choose the segmentation algorithm
 option = int(raw_input("What skin segmentation algorithm would you like to use?\n1) OTSU Thresholding \n2) HSV Skin Sample Segmentation\n"))
 
+ax = Axis()
+curr_time = time.time()
+ct = 1
+
+print "Press c to use current frame for calibration"
 while(True):
     # Capture frame-by-frameqq
     ret, BGR_frame = cap.read()
@@ -70,14 +77,56 @@ while(True):
     cv2.circle(BGR_frame, palmCenter, 5, [0,0,255], 2)
 
     # Display the resulting frame
-    cv2.imshow('frame', BGR_frame)
+    #cv2.imshow('frame', BGR_frame)
 
     # Record a video
     # out.write(frame)
+    if cv2.waitKey(1) & 0xFF == ord('c'):
+
+        print "Calibrating"
+        fingers = ax.calibrate(BGR_frame, hull, palmCenter)
+
+        for finger in fingers:
+            cv2.circle(BGR_frame, finger, 5, [0,0,255], 2)
+        
+        img_pts = ax.get_img_pts(fingers, palmCenter)
+        axis = ax.get_axis_2d(img_pts)
+        cv2.line(BGR_frame,axis[3],axis[0],(255,0,0),5)
+        cv2.line(BGR_frame,axis[3],axis[1],(0,255,0),5)
+        cv2.line(BGR_frame,axis[3],axis[2],(0,0,255),5)
+        cv2.imshow('frame', BGR_frame)
+        curr_time = time.time()
+
+    else:
+
+        if ax.calibrated:
+            # calibrating again each time actually seems to work better idk
+            fingers = ax.calibrate(BGR_frame, hull, palmCenter)
+            #fingers = ax.find_fingers(BGR_frame, hull, palmCenter)#ax.calibrate(BGR_frame, hull, palmCenter)
+
+            for finger in fingers:
+                cv2.circle(BGR_frame, finger, 5, [0,0,255], 2)
+            
+            img_pts = ax.get_img_pts(fingers, palmCenter)
+            axis = ax.get_axis_2d(img_pts)
+            cv2.line(BGR_frame,axis[3],axis[0],(255,0,0),5)
+            cv2.line(BGR_frame,axis[3],axis[1],(0,255,0),5)
+            cv2.line(BGR_frame,axis[3],axis[2],(0,0,255),5)
+
+            # if time.time() - curr_time >= 3:
+            #     cv2.imwrite("img" + str(ct) + ".jpg", BGR_frame)
+            #     ct += 1
+            #     print "saved image"
+            #     curr_time = time.time()
+
+        
+        cv2.imshow('frame', BGR_frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
 # Release the video capture
+#option = int(raw_input("What skin segmentation algorithm would you like to use?\n1) OTSU Thresholding \n2) HSV Skin Sample Segmentation\n"))
+
 cap.release()
 cv2.destroyAllWindows()
