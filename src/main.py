@@ -54,7 +54,7 @@ print "Press c to use current frame for calibration"
 while(True):
     # Capture frame-by-frameqq
     ret, BGR_frame = cap.read()
-    #BGR_frame = cv2.flip(BGR_frame,1) #vertical flip
+    BGR_frame = cv2.flip(BGR_frame,1) #vertical flip
 
     # thresholding to find hand
     if option == 1:
@@ -115,6 +115,27 @@ while(True):
             cv2.line(BGR_frame,axis[3],axis[0],(255,0,0),5)
             cv2.line(BGR_frame,axis[3],axis[1],(0,255,0),5)
             cv2.line(BGR_frame,axis[3],axis[2],(0,0,255),5)
+
+            cv2.line(BGR_frame,axis[1],axis[6],(0,0,255),5)
+            cv2.line(BGR_frame,axis[1],axis[4],(0,0,255),5)
+
+            cv2.line(BGR_frame,axis[4],axis[2],(0,0,255),5)
+            cv2.line(BGR_frame,axis[4],axis[7],(0,0,255),5)
+
+            cv2.line(BGR_frame,axis[7],axis[6],(0,0,255),5)
+            cv2.line(BGR_frame,axis[7],axis[5],(0,0,255),5)
+            cv2.line(BGR_frame,axis[5],axis[2],(0,0,255),5)
+            cv2.line(BGR_frame,axis[5],axis[0],(0,0,255),5)
+
+        #     self.axis[3] = (origin[0], origin[1], 0) #(0,0,0)
+        # self.axis[0] = (py[0], py[1], 0) #(0,3,0)
+        # self.axis[1] = (px[0], px[1], 0) #(3,0,0)
+        # self.axis[2] = (origin[0], origin[1], -200) #(0,0,-3)
+
+        # self.axis[4] = (px[0], px[1], -200) #(3,0,-3)
+        # self.axis[5] = (py[0], py[1], -200)  #(0,-3,-3)
+        # self.axis[6] = (px[0], py[1], 0) #(3,3,0)
+        # self.axis[7] = (px[0], py[1], -200) #(3,3,-3)
 
             # if time.time() - curr_time >= 3:
             #     cv2.imwrite("img" + str(ct) + ".jpg", BGR_frame)

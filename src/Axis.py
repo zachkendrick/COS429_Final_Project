@@ -136,11 +136,12 @@ class Axis:
 	def calibrate(self, image, hull, palmCenter):
 
 		# save camera matrix based on image size
-		self.camera_matrix = np.identity(3)#np.array([[BGR_frame.shape[0],0,0],[0,BGR_frame.shape[1],0],[0,0,1]])
-		self.camera_matrix[0][0] = image.shape[0]
-		self.camera_matrix[1][1] = image.shape[1]
-		self.camera_matrix[0][2] = image.shape[0]/2
-		self.camera_matrix[1][2] = image.shape[1]/2
+		self.camera_matrix = np.array([[995.84054625, 0.,634.00808335],[0.,992.18961999,361.25660867],[0.,0.,1.]])   
+		# self.camera_matrix = np.identity(3)#np.array([[BGR_frame.shape[0],0,0],[0,BGR_frame.shape[1],0],[0,0,1]])
+		# self.camera_matrix[0][0] = image.shape[0]
+		# self.camera_matrix[1][1] = image.shape[1]
+		# self.camera_matrix[0][2] = image.shape[0]/2
+		# self.camera_matrix[1][2] = image.shape[1]/2
 
 		# all points in the hull as a list
 		x = [i[0][0] for i in hull]
@@ -238,29 +239,42 @@ class Axis:
 		#(success, rvec, tvec) = cv2.solvePnP(self.object_pts, self.img_pts, self.camera_matrix, dist_coeffs) #flags=cv2.CV_ITERATIVE)
 		
 		# form axis based on thumb, middle finger, and orthogonal projection of one on the other
-		self.axis = np.zeros((4,3))
+		self.axis = np.zeros((8,3))
 		
-		self.axis[3] = (origin[0], origin[1], 0)
-		self.axis[0] = (py[0], py[1], 0)
-		self.axis[1] = (px[0], px[1], 0)
-		self.axis[2] = (origin[0], origin[1], -100)
+		self.axis[3] = (origin[0], origin[1], 0) #(0,0,0)
+		self.axis[0] = (py[0], py[1], 0) #(0,3,0)
+		self.axis[1] = (px[0], px[1], 0) #(3,0,0)
+		self.axis[2] = (origin[0], origin[1], -100) #(0,0,-3)
 
+		self.axis[4] = (px[0], px[1], -100) #(3,0,-3)
+		self.axis[5] = (py[0], py[1], -100)  #(0,-3,-3)
+		self.axis[6] = (px[0], py[1], 0) #(3,3,0)
+		self.axis[7] = (px[0], py[1], -100) #(3,3,-3)
+
+
+		  #   1 axis = np.float32([[0,0,0], [0,3,0], [3,3,0], [3,0,0],
+    # 2                    [0,0,-3],[0,3,-3],[3,3,-3],[3,0,-3] ])
 
 	# solvePnP given new image points, project the points, and return
 	# the x, y, z points, as well as the new origin
 	def get_axis_2d(self, img_pts):
-		dist_coeffs = np.zeros((4,1))
-
+		#dist_coeffs = np.zeros((4,1))
+		dist_coeffs = np.array([[-1.91066278e-01,8.25442597e-01,-1.05601400e-03,-5.95083962e-03,-1.14370171e+00]])
 		(success, rvec, tvec) = cv2.solvePnP(self.object_pts, img_pts, self.camera_matrix, dist_coeffs) #flags=cv2.CV_ITERATIVE)
 		#print success
 		#print self.axis
 		#print self.camera_matrix
 		(new_axis, jacobian) = cv2.projectPoints(self.axis, rvec, tvec, self.camera_matrix, None)
 
-		x_line = (int(new_axis[0][0][0]), int(new_axis[0][0][1]))
-		y_line = (int(new_axis[1][0][0]), int(new_axis[1][0][1]))
-		z_line = (int(new_axis[2][0][0]), int(new_axis[2][0][1]))
-		origin = (int(new_axis[3][0][0]), int(new_axis[3][0][1]))
+		x_line = (int(new_axis[0][0][0]), int(new_axis[0][0][1])+100)
+		y_line = (int(new_axis[1][0][0]), int(new_axis[1][0][1])+100)
+		z_line = (int(new_axis[2][0][0]), int(new_axis[2][0][1])+100)
+		origin = (int(new_axis[3][0][0]), int(new_axis[3][0][1])+100)
+
+		pt_5 = (int(new_axis[4][0][0]), int(new_axis[4][0][1])+100)
+		pt_6 = (int(new_axis[5][0][0]), int(new_axis[5][0][1])+100)
+		pt_7 = (int(new_axis[6][0][0]), int(new_axis[6][0][1])+100)
+		pt_8 = (int(new_axis[7][0][0]), int(new_axis[7][0][1])+100)
 
 		# check if too different
 		thresh = 350
@@ -291,7 +305,7 @@ class Axis:
 			# 	print "origin ",
 			# 	print np.linalg.norm(np.array(self.axis_2d[3]) - np.array(origin))
 
-		self.axis_2d = (x_line, y_line, z_line, origin)
+		self.axis_2d = (x_line, y_line, z_line, origin, pt_5, pt_6, pt_7, pt_8)
 
 		return self.axis_2d
 
