@@ -18,6 +18,10 @@ class Axis:
 		#self.img_pts = None
 		self.calibrated = False
 
+		self.axis_2d = None 
+
+		self.prev_fingers = None 
+
 	# given a convex hull, find points that are likely to be the fingers 
 	def find_fingers(self, BGR_frame, hull, palmCenter):
 
@@ -25,14 +29,57 @@ class Axis:
 		x = [i[0][0] for i in hull]
 		y = [i[0][1] for i in hull]
 
-		# find only the fingers
+		pts = np.array([[i[0][0], i[0][1]] for i in hull])
+		# # # find only the fingers
+		# pts = np.array([i[0] for i in hull])
+		# palmCenter_np = np.array(palmCenter)
+
+		# fingers = []
+		# x_fingers = []
+		# y_fingers = []
+
+
+		# distances = []
+		# for idx in range(len(x)):
+		    
+		#     distances.append(np.linalg.norm(palmCenter_np-pts[idx]))
+		#     #if y[idx] < palmCenter[1] - 50:
+		#     #    y_fingers.append(y[idx])
+		#     #    x_fingers.append(x[idx])
+
+		    
+		# distances = sorted(range(len(distances)), key=lambda x: -distances[x])
+		# fingers = [(x[i], y[i]) for i in distances[:12]]
+
+		# fingers = sorted(fingers, key=lambda a: a[0])
+
+		# if self.calibrated:
+
+		# 	fingers = []
+		# 	for prev_finger in self.prev_fingers:
+				
+		# 		smallest_dist = float('inf')
+		# 		smallest_pt = None 
+
+		# 		for pt in pts:
+		# 			dist = np.linalg.norm(np.array(prev_finger) - pt)
+		# 			if dist < smallest_dist:
+		# 				smallest_pt = pt
+		# 				smallest_dist = dist
+
+		# 		fingers.append(tuple(smallest_pt.tolist()))
+		# 	#print fingers
+		# 	return fingers
+
+
+
 		fingers = []
 		for idx in range(len(x)):
 
 			if y[idx] < palmCenter[1] - 50:
 				fingers.append((x[idx],y[idx]))
 
-		# group close points together
+		# # group close points together
 		fingers = sorted(fingers, key=lambda a: a[0])
 		x_fingers = [i[0] for i in fingers]
 		y_fingers = [i[1] for i in fingers]
@@ -58,9 +105,30 @@ class Axis:
 
 			max_y = np.argmin(same_finger_y)
 			grouped.append((same_finger_x[max_y], same_finger_y[max_y]))
+			#if self.prev_fingers is None:
+			#grouped.append((int(np.mean(same_finger_x)), int(np.mean(same_finger_y))))
+				
+			# else:
+			# 	for prev_finger in self.prev_fingers:
+
+			# 		smallest = None
+			# 		smallest_dist = float('inf')
+			# 		for idx in range(len(same_finger_x)):
+
+			# 			pt = (same_finger_x[idx], same_finger_y[idx])
+			# 			dist = np.linalg.norm(np.array(pt) - np.array(prev_finger))
+			# 			if dist < smallest_dist:
+			# 				smallest_dist = dist
+			# 				smallest = pt
+
+			# 		grouped.append(smallest)
+
+			#grouped.append((int(np.mean(same_finger_x)), int(np.mean(same_finger_y))))
 			
 			if len(grouped) >= 5:
 				break
+		
+		self.prev_fingers = grouped
 		return grouped
 
 	# initial calibration -- approximation of camera matrix, and formation
@@ -78,41 +146,44 @@ class Axis:
 		x = [i[0][0] for i in hull]
 		y = [i[0][1] for i in hull]
 
-		# find only the fingers
-		fingers = []
-		for idx in range(len(x)):
+		# # find only the fingers
+		fingers = self.find_fingers(image, hull, palmCenter)
+		# fingers = []
+		# for idx in range(len(x)):
 
-			if y[idx] < palmCenter[1] - 50:
-				fingers.append((x[idx],y[idx]))
+		# 	if y[idx] < palmCenter[1] - 50:
+		# 		fingers.append((x[idx],y[idx]))
 
-		# group close points together
-		fingers = sorted(fingers, key=lambda a: a[0])
-		x_fingers = [i[0] for i in fingers]
-		y_fingers = [i[1] for i in fingers]
+		# # group close points together
+		grouped = sorted(fingers, key=lambda a: a[0])
+		#x_fingers = [i[0] for i in grouped]
+		#y_fingers = [i[1] for i in grouped]
 
-		# group if within 10 pixels of one another, counts as same 
-		idx = 0
+		# # group if within 10 pixels of one another, counts as same 
+		# idx = 0
 
-		grouped = []
-		while idx < len(x_fingers):
+		# grouped = []
+		# while idx < len(x_fingers):
 			
-			same_finger_x = []
-			same_finger_y = []
+		# 	same_finger_x = []
+		# 	same_finger_y = []
 
-			same_finger_x.append(x_fingers[idx])
-			same_finger_y.append(y_fingers[idx])
+		# 	same_finger_x.append(x_fingers[idx])
+		# 	same_finger_y.append(y_fingers[idx])
 			
-			idx += 1
-			while idx < len(x_fingers) and abs(x_fingers[idx] - x_fingers[idx-1]) < 50 and abs(y_fingers[idx] - y_fingers[idx-1]) < 50:
-				same_finger_x.append(x_fingers[idx])
-				same_finger_y.append(y_fingers[idx])
-				idx += 1
+		# 	idx += 1
+		# 	while idx < len(x_fingers) and abs(x_fingers[idx] - x_fingers[idx-1]) < 50 and abs(y_fingers[idx] - y_fingers[idx-1]) < 50:
+		# 		same_finger_x.append(x_fingers[idx])
+		# 		same_finger_y.append(y_fingers[idx])
+		# 		idx += 1
 
-			max_y = np.argmin(same_finger_y)
-			grouped.append((same_finger_x[max_y], same_finger_y[max_y]))
-			
-			if len(grouped) >= 5:
-				break
+		# 	#max_y = np.argmin(same_finger_y)
+		# 	#grouped.append((same_finger_x[max_y], same_finger_y[max_y]))
+		# 	grouped.append((int(np.mean(same_finger_x)), int(np.mean(same_finger_y))))
+
+						
+		# 	if len(grouped) >= 5:
+		# 		break
 
 		grouped_x = [grouped[i][0] for i in range(len(grouped))]
 		grouped_y = [grouped[i][1] for i in range(len(grouped))]
@@ -191,7 +262,38 @@ class Axis:
 		z_line = (int(new_axis[2][0][0]), int(new_axis[2][0][1]))
 		origin = (int(new_axis[3][0][0]), int(new_axis[3][0][1]))
 
-		return (x_line, y_line, z_line, origin)
+		# check if too different
+		thresh = 350
+		origin_thresh = 250
+		if self.axis_2d:
+
+			if np.linalg.norm(np.array(self.axis_2d[0]) - np.array(x_line)) > thresh:
+				x_line = self.axis_2d[0]
+			# else:
+			# 	print "x ",
+			# 	print np.linalg.norm(np.array(self.axis_2d[0]) - np.array(x_line))
+
+			if np.linalg.norm(np.array(self.axis_2d[1]) - np.array(y_line)) > thresh:
+				y_line = self.axis_2d[1]
+			# else:
+			# 	print "y ",
+			# 	print np.linalg.norm(np.array(self.axis_2d[1]) - np.array(y_line))
+
+			if np.linalg.norm(np.array(self.axis_2d[2]) - np.array(z_line)) > origin_thresh:
+				z_line = self.axis_2d[2]
+			# else:
+			# 	print "z ",
+			# 	print np.linalg.norm(np.array(self.axis_2d[2]) - np.array(z_line))
+
+			if np.linalg.norm(np.array(self.axis_2d[3]) - np.array(origin)) > origin_thresh:
+				origin = self.axis_2d[3]
+			# else:
+			# 	print "origin ",
+			# 	print np.linalg.norm(np.array(self.axis_2d[3]) - np.array(origin))
+
+		self.axis_2d = (x_line, y_line, z_line, origin)
+
+		return self.axis_2d
 
 	# groups points close to each other as the same finger, takes 
 	# the one with the smallest y value (the highest point in image) as fingertip

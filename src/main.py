@@ -54,7 +54,7 @@ print "Press c to use current frame for calibration"
 while(True):
     # Capture frame-by-frameqq
     ret, BGR_frame = cap.read()
-    BGR_frame = cv2.flip(BGR_frame,1) #vertical flip
+    #BGR_frame = cv2.flip(BGR_frame,1) #vertical flip
 
     # thresholding to find hand
     if option == 1:
@@ -101,14 +101,17 @@ while(True):
 
         if ax.calibrated:
             # calibrating again each time actually seems to work better idk
-            fingers = ax.calibrate(BGR_frame, hull, palmCenter)
-            #fingers = ax.find_fingers(BGR_frame, hull, palmCenter)#ax.calibrate(BGR_frame, hull, palmCenter)
+            #fingers = ax.calibrate(BGR_frame, hull, palmCenter)
+            fingers = ax.find_fingers(BGR_frame, hull, palmCenter)#ax.calibrate(BGR_frame, hull, palmCenter)
 
             for finger in fingers:
                 cv2.circle(BGR_frame, finger, 5, [0,0,255], 2)
             
-            img_pts = ax.get_img_pts(fingers, palmCenter)
-            axis = ax.get_axis_2d(img_pts)
+            if len(fingers) < 5:
+                axis = ax.axis_2d
+            else:
+                img_pts = ax.get_img_pts(fingers, palmCenter)
+                axis = ax.get_axis_2d(img_pts)
             cv2.line(BGR_frame,axis[3],axis[0],(255,0,0),5)
             cv2.line(BGR_frame,axis[3],axis[1],(0,255,0),5)
             cv2.line(BGR_frame,axis[3],axis[2],(0,0,255),5)
