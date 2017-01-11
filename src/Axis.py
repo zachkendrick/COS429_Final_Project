@@ -104,9 +104,9 @@ class Axis:
 				idx += 1
 
 			max_y = np.argmin(same_finger_y)
-			grouped.append((same_finger_x[max_y], same_finger_y[max_y]))
+			#grouped.append((same_finger_x[max_y], same_finger_y[max_y]))
 			#if self.prev_fingers is None:
-			#grouped.append((int(np.mean(same_finger_x)), int(np.mean(same_finger_y))))
+			grouped.append((int(np.mean(same_finger_x)), int(np.mean(same_finger_y))))
 				
 			# else:
 			# 	for prev_finger in self.prev_fingers:
@@ -266,15 +266,15 @@ class Axis:
 		#print self.camera_matrix
 		(new_axis, jacobian) = cv2.projectPoints(self.axis, rvec, tvec, self.camera_matrix, None)
 
-		x_line = (int(new_axis[0][0][0]), int(new_axis[0][0][1])+100)
-		y_line = (int(new_axis[1][0][0]), int(new_axis[1][0][1])+100)
-		z_line = (int(new_axis[2][0][0]), int(new_axis[2][0][1])+100)
-		origin = (int(new_axis[3][0][0]), int(new_axis[3][0][1])+100)
+		x_line = (int(new_axis[0][0][0]+100), int(new_axis[0][0][1])+200)
+		y_line = (int(new_axis[1][0][0]+100), int(new_axis[1][0][1])+200)
+		z_line = (int(new_axis[2][0][0]+100), int(new_axis[2][0][1])+200)
+		origin = (int(new_axis[3][0][0]+100), int(new_axis[3][0][1])+200)
 
-		pt_5 = (int(new_axis[4][0][0]), int(new_axis[4][0][1])+100)
-		pt_6 = (int(new_axis[5][0][0]), int(new_axis[5][0][1])+100)
-		pt_7 = (int(new_axis[6][0][0]), int(new_axis[6][0][1])+100)
-		pt_8 = (int(new_axis[7][0][0]), int(new_axis[7][0][1])+100)
+		pt_5 = (int(new_axis[4][0][0]+100), int(new_axis[4][0][1])+200)
+		pt_6 = (int(new_axis[5][0][0]+100), int(new_axis[5][0][1])+200)
+		pt_7 = (int(new_axis[6][0][0]+100), int(new_axis[6][0][1])+200)
+		pt_8 = (int(new_axis[7][0][0]+100), int(new_axis[7][0][1])+200)
 
 		# check if too different
 		thresh = 350

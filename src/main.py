@@ -112,11 +112,20 @@ while(True):
             else:
                 img_pts = ax.get_img_pts(fingers, palmCenter)
                 axis = ax.get_axis_2d(img_pts)
-            cv2.line(BGR_frame,axis[3],axis[0],(255,0,0),5)
-            cv2.line(BGR_frame,axis[3],axis[1],(0,255,0),5)
+
+            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[3],axis[0],axis[6]])],(0,255,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[3],axis[2],axis[4]])],(0,255,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[4],axis[7],axis[6]])],(0,255,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[2],axis[3],axis[0],axis[5]])],(0,255,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[2],axis[4],axis[7],axis[5]])],(0,255,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[7],axis[5],axis[0],axis[6]])],(0,255,0))
+
+            cv2.line(BGR_frame,axis[3],axis[0],(0,0,255),5)
+            cv2.line(BGR_frame,axis[3],axis[1],(0,0,255),5)
+            cv2.line(BGR_frame,axis[1],axis[6],(0,0,255),5)
+
             cv2.line(BGR_frame,axis[3],axis[2],(0,0,255),5)
 
-            cv2.line(BGR_frame,axis[1],axis[6],(0,0,255),5)
             cv2.line(BGR_frame,axis[1],axis[4],(0,0,255),5)
 
             cv2.line(BGR_frame,axis[4],axis[2],(0,0,255),5)
@@ -126,6 +135,11 @@ while(True):
             cv2.line(BGR_frame,axis[7],axis[5],(0,0,255),5)
             cv2.line(BGR_frame,axis[5],axis[2],(0,0,255),5)
             cv2.line(BGR_frame,axis[5],axis[0],(0,0,255),5)
+
+            cv2.line(BGR_frame,axis[0],axis[6],(0,0,255),5)
+
+            #cv2.rectangle(BGR_frame, axis[3], axis[6],(0,255,0))
+            #BGR_frame = cv2.drawContours(BGR_frame, [axis[1],axis[3],axis[6],axis[0]],0,(0,255,0),2)
 
         #     self.axis[3] = (origin[0], origin[1], 0) #(0,0,0)
         # self.axis[0] = (py[0], py[1], 0) #(0,3,0)
