@@ -71,7 +71,7 @@ while(True):
         BGR_frame = pre.applyMask(skinMask, BGR_frame)
 
     # find finger tips and palm
-    cnt, hull = hand.getConvexHull(skinMask)
+    cnt, hull,indices = hand.getConvexHull(skinMask)
     cv2.drawContours(BGR_frame,[hull],0,(255,0,0),2)
     palmCenter = hand.centerOfPalm(cnt)
     cv2.circle(BGR_frame, palmCenter, 5, [0,0,255], 2)
@@ -84,7 +84,7 @@ while(True):
     if cv2.waitKey(1) & 0xFF == ord('c'):
 
         print "Calibrating"
-        fingers = ax.calibrate(BGR_frame, hull, palmCenter)
+        fingers = ax.calibrate(BGR_frame, hull, indices, cnt, palmCenter)
 
         for finger in fingers:
             cv2.circle(BGR_frame, finger, 5, [0,0,255], 2)
@@ -102,7 +102,7 @@ while(True):
         if ax.calibrated:
             # calibrating again each time actually seems to work better idk
             #fingers = ax.calibrate(BGR_frame, hull, palmCenter)
-            fingers = ax.find_fingers(BGR_frame, hull, palmCenter)#ax.calibrate(BGR_frame, hull, palmCenter)
+            fingers = ax.find_fingers(BGR_frame, hull, indices, cnt, palmCenter)#ax.calibrate(BGR_frame, hull, palmCenter)
 
             for finger in fingers:
                 cv2.circle(BGR_frame, finger, 5, [0,0,255], 2)
@@ -113,12 +113,12 @@ while(True):
                 img_pts = ax.get_img_pts(fingers, palmCenter)
                 axis = ax.get_axis_2d(img_pts)
 
-            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[3],axis[0],axis[6]])],(0,255,0))
-            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[3],axis[2],axis[4]])],(0,255,0))
-            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[4],axis[7],axis[6]])],(0,255,0))
-            cv2.fillPoly(BGR_frame,[np.array([axis[2],axis[3],axis[0],axis[5]])],(0,255,0))
-            cv2.fillPoly(BGR_frame,[np.array([axis[2],axis[4],axis[7],axis[5]])],(0,255,0))
-            cv2.fillPoly(BGR_frame,[np.array([axis[7],axis[5],axis[0],axis[6]])],(0,255,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[3],axis[0],axis[6]])],(0,0,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[3],axis[2],axis[4]])],(0,0,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[4],axis[7],axis[6]])],(0,0,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[2],axis[3],axis[0],axis[5]])],(0,0,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[2],axis[4],axis[7],axis[5]])],(0,0,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[7],axis[5],axis[0],axis[6]])],(0,0,0))
 
             cv2.line(BGR_frame,axis[3],axis[0],(0,0,255),5)
             cv2.line(BGR_frame,axis[3],axis[1],(0,0,255),5)
@@ -151,11 +151,11 @@ while(True):
         # self.axis[6] = (px[0], py[1], 0) #(3,3,0)
         # self.axis[7] = (px[0], py[1], -200) #(3,3,-3)
 
-            # if time.time() - curr_time >= 3:
-            #     cv2.imwrite("img" + str(ct) + ".jpg", BGR_frame)
-            #     ct += 1
-            #     print "saved image"
-            #     curr_time = time.time()
+            if time.time() - curr_time >= 2:
+                cv2.imwrite("img" + str(ct) + ".jpg", BGR_frame)
+                ct += 1
+                print "saved image"
+                curr_time = time.time()
 
         
         cv2.imshow('frame', BGR_frame)

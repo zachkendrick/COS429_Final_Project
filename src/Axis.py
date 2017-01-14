@@ -22,74 +22,59 @@ class Axis:
 
 		self.prev_fingers = None 
 
+	def innerAngle(self,px1, py1, px2, py2, cx1, cy1):
+	
+		dist1 = np.sqrt((px1-cx1)**2 + (py1-cy1)**2)
+		dist2 = np.sqrt((px2-cx1)**2 + (py2-cy1)**2)
+		
+		# find closet point to C
+		(Ax,Ay,Bx,By,Cx,Cy) = px2, py2, px1, py1, cx1, cy1
+		if dist1 >= dist2:
+			Bx = px2
+			By = py2
+			Ax = px1
+			Ay = py1
+			
+		Q1 = Cx - Ax
+		Q2 = Cy - Ay
+		P1 = Bx - Ax
+		P2 = By - Ay
+		
+		
+		A = np.arccos((P1*Q1 + P2*Q2) / (np.sqrt(P1**2+P2**2) * np.sqrt(Q1**2+Q2**2)))
+		A = A*180/np.pi
+		return A
+
 	# given a convex hull, find points that are likely to be the fingers 
-	def find_fingers(self, BGR_frame, hull, palmCenter):
+	def find_fingers(self, BGR_frame, hull, indices, cnt, palmCenter):
 
-		# all points in the hull as a list
-		x = [i[0][0] for i in hull]
-		y = [i[0][1] for i in hull]
-
-		pts = np.array([[i[0][0], i[0][1]] for i in hull])
-		# # # find only the fingers
-		# pts = np.array([i[0] for i in hull])
-		# palmCenter_np = np.array(palmCenter)
-
-		# fingers = []
-		# x_fingers = []
-		# y_fingers = []
-
-
-		# distances = []
-		# for idx in range(len(x)):
-		    
-		#     distances.append(np.linalg.norm(palmCenter_np-pts[idx]))
-		#     #if y[idx] < palmCenter[1] - 50:
-		#     #    y_fingers.append(y[idx])
-		#     #    x_fingers.append(x[idx])
-
-		    
-		# distances = sorted(range(len(distances)), key=lambda x: -distances[x])
-		# fingers = [(x[i], y[i]) for i in distances[:12]]
-
-		# fingers = sorted(fingers, key=lambda a: a[0])
-
-		# if self.calibrated:
-
-		# 	fingers = []
-		# 	for prev_finger in self.prev_fingers:
-				
-		# 		smallest_dist = float('inf')
-		# 		smallest_pt = None 
-
-		# 		for pt in pts:
-		# 			dist = np.linalg.norm(np.array(prev_finger) - pt)
-		# 			if dist < smallest_dist:
-		# 				smallest_pt = pt
-		# 				smallest_dist = dist
-
-		# 		fingers.append(tuple(smallest_pt.tolist()))
-		# 	#print fingers
-		# 	return fingers
-
-
-
-		fingers = []
-		for idx in range(len(x)):
-
-			if y[idx] < palmCenter[1] - 50:
-				fingers.append((x[idx],y[idx]))
-
-		# # group close points together
-		fingers = sorted(fingers, key=lambda a: a[0])
-		x_fingers = [i[0] for i in fingers]
-		y_fingers = [i[1] for i in fingers]
-
-		# group if within 10 pixels of one another, counts as same 
 		idx = 0
+		defects = cv2.convexityDefects(cnt, indices)
+
+		points = []
+		for i in range(defects.shape[0]):
+			s,e,f,d = defects[i,0]
+			p1 = tuple(cnt[s][0])
+			p2 = tuple(cnt[e][0])
+			p3 = tuple(cnt[f][0])
+
+			x,y,w,h = cv2.boundingRect(hull[0])
+
+			center = (x + float(w)/2, y + float(h)/2)
+		
+			angle = np.arctan2(center[1] - p1[1], center[0] - p1[0]) * 180 / np.pi
+			inAngle = self.innerAngle(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1])
+			length = np.sqrt((p1[0] - p3[0])**2 + (p1[1] - p3[1])**2)
+			
+			if (angle > -30 and angle < 160) and (abs(inAngle) > 20) and (abs(inAngle) < 120) and (length > 0.1 * h):
+				points.append(p1)
+				points.append(p2)
 
 		grouped = []
+		x_fingers = [points[i][0] for i in range(len(points))]
+		y_fingers = [points[i][1] for i in range(len(points))]
 
-		while idx < len(x_fingers):
+		while idx < len(points):
 			
 			same_finger_x = []
 			same_finger_y = []
@@ -98,42 +83,27 @@ class Axis:
 			same_finger_y.append(y_fingers[idx])
 			
 			idx += 1
-			while idx < len(x_fingers) and abs(x_fingers[idx] - x_fingers[idx-1]) < 50 and abs(y_fingers[idx] - y_fingers[idx-1]) < 50:
+			while idx < len(x_fingers) and abs(x_fingers[idx] - x_fingers[idx-1]) < 30:
 				same_finger_x.append(x_fingers[idx])
 				same_finger_y.append(y_fingers[idx])
 				idx += 1
 
 			max_y = np.argmin(same_finger_y)
-			#grouped.append((same_finger_x[max_y], same_finger_y[max_y]))
-			#if self.prev_fingers is None:
-			grouped.append((int(np.mean(same_finger_x)), int(np.mean(same_finger_y))))
-				
-			# else:
-			# 	for prev_finger in self.prev_fingers:
+			grouped.append((same_finger_x[max_y], same_finger_y[max_y]))
 
-			# 		smallest = None
-			# 		smallest_dist = float('inf')
-			# 		for idx in range(len(same_finger_x)):
+		grouped = sorted(grouped, key=lambda xy: xy[0])
+		   
+		grouped_x = [grouped[i][0] for i in range(len(grouped))]
+		grouped_y = [grouped[i][1] for i in range(len(grouped))]
 
-			# 			pt = (same_finger_x[idx], same_finger_y[idx])
-			# 			dist = np.linalg.norm(np.array(pt) - np.array(prev_finger))
-			# 			if dist < smallest_dist:
-			# 				smallest_dist = dist
-			# 				smallest = pt
-
-			# 		grouped.append(smallest)
-
-			#grouped.append((int(np.mean(same_finger_x)), int(np.mean(same_finger_y))))
-			
-			if len(grouped) >= 5:
-				break
+		#print grouped
 		
 		self.prev_fingers = grouped
 		return grouped
 
 	# initial calibration -- approximation of camera matrix, and formation
 	# of object points based on the initial calibration image 
-	def calibrate(self, image, hull, palmCenter):
+	def calibrate(self, image, hull, indices, cnt, palmCenter):
 
 		# save camera matrix based on image size
 		self.camera_matrix = np.array([[995.84054625, 0.,634.00808335],[0.,992.18961999,361.25660867],[0.,0.,1.]])   
@@ -148,43 +118,11 @@ class Axis:
 		y = [i[0][1] for i in hull]
 
 		# # find only the fingers
-		fingers = self.find_fingers(image, hull, palmCenter)
-		# fingers = []
-		# for idx in range(len(x)):
-
-		# 	if y[idx] < palmCenter[1] - 50:
-		# 		fingers.append((x[idx],y[idx]))
+		fingers = self.find_fingers(image, hull, indices, cnt, palmCenter)
 
 		# # group close points together
 		grouped = sorted(fingers, key=lambda a: a[0])
-		#x_fingers = [i[0] for i in grouped]
-		#y_fingers = [i[1] for i in grouped]
-
-		# # group if within 10 pixels of one another, counts as same 
-		# idx = 0
-
-		# grouped = []
-		# while idx < len(x_fingers):
-			
-		# 	same_finger_x = []
-		# 	same_finger_y = []
-
-		# 	same_finger_x.append(x_fingers[idx])
-		# 	same_finger_y.append(y_fingers[idx])
-			
-		# 	idx += 1
-		# 	while idx < len(x_fingers) and abs(x_fingers[idx] - x_fingers[idx-1]) < 50 and abs(y_fingers[idx] - y_fingers[idx-1]) < 50:
-		# 		same_finger_x.append(x_fingers[idx])
-		# 		same_finger_y.append(y_fingers[idx])
-		# 		idx += 1
-
-		# 	#max_y = np.argmin(same_finger_y)
-		# 	#grouped.append((same_finger_x[max_y], same_finger_y[max_y]))
-		# 	grouped.append((int(np.mean(same_finger_x)), int(np.mean(same_finger_y))))
-
-						
-		# 	if len(grouped) >= 5:
-		# 		break
+		
 
 		grouped_x = [grouped[i][0] for i in range(len(grouped))]
 		grouped_y = [grouped[i][1] for i in range(len(grouped))]
@@ -253,7 +191,7 @@ class Axis:
 
 
 		  #   1 axis = np.float32([[0,0,0], [0,3,0], [3,3,0], [3,0,0],
-    # 2                    [0,0,-3],[0,3,-3],[3,3,-3],[3,0,-3] ])
+	# 2					[0,0,-3],[0,3,-3],[3,3,-3],[3,0,-3] ])
 
 	# solvePnP given new image points, project the points, and return
 	# the x, y, z points, as well as the new origin
@@ -277,8 +215,8 @@ class Axis:
 		pt_8 = (int(new_axis[7][0][0]+100), int(new_axis[7][0][1])+200)
 
 		# check if too different
-		thresh = 350
-		origin_thresh = 250
+		thresh = 500
+		origin_thresh = 500
 		if self.axis_2d:
 
 			if np.linalg.norm(np.array(self.axis_2d[0]) - np.array(x_line)) > thresh:

@@ -27,8 +27,10 @@ class Hand:
         _, contours, hierarchy = cv2.findContours(skin_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         cnt = Hand.getLargestContour(contours)
         cnt = cv2.approxPolyDP(cnt, 0.0005*cv2.arcLength(cnt,True), True)
+        indices = cv2.convexHull(cnt, returnPoints=False)
         hull = cv2.convexHull(cnt)
-        return cnt, hull
+        #hull = [np.array(cnt[i[0]]) for i in indices]
+        return cnt, hull, indices
     
 
     @staticmethod
