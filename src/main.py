@@ -83,6 +83,7 @@ while(True):
     # out.write(frame)
     if cv2.waitKey(1) & 0xFF == ord('c'):
 
+        cv2.imwrite("calibration.jpg", BGR_frame)
         print "Calibrating"
         fingers = ax.calibrate(BGR_frame, hull, indices, cnt, palmCenter)
 
@@ -113,30 +114,30 @@ while(True):
                 img_pts = ax.get_img_pts(fingers, palmCenter)
                 axis = ax.get_axis_2d(img_pts)
 
-            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[3],axis[0],axis[6]])],(0,0,0))
-            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[3],axis[2],axis[4]])],(0,0,0))
-            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[4],axis[7],axis[6]])],(0,0,0))
-            cv2.fillPoly(BGR_frame,[np.array([axis[2],axis[3],axis[0],axis[5]])],(0,0,0))
-            cv2.fillPoly(BGR_frame,[np.array([axis[2],axis[4],axis[7],axis[5]])],(0,0,0))
-            cv2.fillPoly(BGR_frame,[np.array([axis[7],axis[5],axis[0],axis[6]])],(0,0,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[3],axis[0],axis[6]])],(225,202,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[3],axis[2],axis[4]])],(225,202,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[1],axis[4],axis[7],axis[6]])],(225,202,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[2],axis[3],axis[0],axis[5]])],(225,202,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[2],axis[4],axis[7],axis[5]])],(225,202,0))
+            cv2.fillPoly(BGR_frame,[np.array([axis[7],axis[5],axis[0],axis[6]])],(225,202,0))
 
-            cv2.line(BGR_frame,axis[3],axis[0],(0,0,255),5)
-            cv2.line(BGR_frame,axis[3],axis[1],(0,0,255),5)
-            cv2.line(BGR_frame,axis[1],axis[6],(0,0,255),5)
+            cv2.line(BGR_frame,axis[3],axis[0],(0,0,0),5)
+            cv2.line(BGR_frame,axis[3],axis[1],(0,0,0),5)
+            cv2.line(BGR_frame,axis[1],axis[6],(0,0,0),5)
 
-            cv2.line(BGR_frame,axis[3],axis[2],(0,0,255),5)
+            cv2.line(BGR_frame,axis[3],axis[2],(0,0,0),5)
 
-            cv2.line(BGR_frame,axis[1],axis[4],(0,0,255),5)
+            cv2.line(BGR_frame,axis[1],axis[4],(0,0,0),5)
 
-            cv2.line(BGR_frame,axis[4],axis[2],(0,0,255),5)
-            cv2.line(BGR_frame,axis[4],axis[7],(0,0,255),5)
+            cv2.line(BGR_frame,axis[4],axis[2],(0,0,0),5)
+            cv2.line(BGR_frame,axis[4],axis[7],(0,0,0),5)
 
-            cv2.line(BGR_frame,axis[7],axis[6],(0,0,255),5)
-            cv2.line(BGR_frame,axis[7],axis[5],(0,0,255),5)
-            cv2.line(BGR_frame,axis[5],axis[2],(0,0,255),5)
-            cv2.line(BGR_frame,axis[5],axis[0],(0,0,255),5)
+            cv2.line(BGR_frame,axis[7],axis[6],(0,0,0),5)
+            cv2.line(BGR_frame,axis[7],axis[5],(0,0,0),5)
+            cv2.line(BGR_frame,axis[5],axis[2],(0,0,0),5)
+            cv2.line(BGR_frame,axis[5],axis[0],(0,0,0),5)
 
-            cv2.line(BGR_frame,axis[0],axis[6],(0,0,255),5)
+            cv2.line(BGR_frame,axis[0],axis[6],(0,0,0),5)
 
             #cv2.rectangle(BGR_frame, axis[3], axis[6],(0,255,0))
             #BGR_frame = cv2.drawContours(BGR_frame, [axis[1],axis[3],axis[6],axis[0]],0,(0,255,0),2)
@@ -157,8 +158,8 @@ while(True):
             #     print "saved image"
             #     curr_time = time.time()
 
-        
-        cv2.imshow('frame', BGR_frame)
+        cv2.imshow('frame', gray_frame)
+        #cv2.imshow('frame', BGR_frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break

@@ -149,7 +149,7 @@ class Axis:
 		grouped_y = [grouped[i][1] for i in range(len(grouped))]
 
 		img_pts = np.zeros((6,2))
-		for idx in range(len(grouped_x)):
+		for idx in range(np.min([6,len(grouped_x)])):
 			img_pts[idx] = (grouped_x[idx], grouped_y[idx])
 		img_pts[-1] = palmCenter
 
@@ -160,7 +160,7 @@ class Axis:
 
 
 		p1 = palmCenter
-		px = (int(grouped_x[0]), int(grouped_y[0]))
+		px = (int(grouped_x[4]), int(grouped_y[4]))
 		py = (int(grouped_x[2]), int(grouped_y[2]))
 
 		# the y axis is through the middle finger and the palm
@@ -204,6 +204,11 @@ class Axis:
 		#print self.camera_matrix
 		(new_axis, jacobian) = cv2.projectPoints(self.axis, rvec, tvec, self.camera_matrix, None)
 
+		# x_line = (int(new_axis[0][0][0]), int(new_axis[0][0][1]))
+		# y_line = (int(new_axis[1][0][0]), int(new_axis[1][0][1]))
+		# z_line = (int(new_axis[2][0][0]), int(new_axis[2][0][1]))
+		# origin = (int(new_axis[3][0][0]), int(new_axis[3][0][1]))
+
 		x_line = (int(new_axis[0][0][0]+100), int(new_axis[0][0][1])+200)
 		y_line = (int(new_axis[1][0][0]+100), int(new_axis[1][0][1])+200)
 		z_line = (int(new_axis[2][0][0]+100), int(new_axis[2][0][1])+200)
@@ -215,8 +220,8 @@ class Axis:
 		pt_8 = (int(new_axis[7][0][0]+100), int(new_axis[7][0][1])+200)
 
 		# check if too different
-		thresh = 500
-		origin_thresh = 500
+		thresh = 350
+		origin_thresh = 250
 		if self.axis_2d:
 
 			if np.linalg.norm(np.array(self.axis_2d[0]) - np.array(x_line)) > thresh:
@@ -245,6 +250,7 @@ class Axis:
 
 		self.axis_2d = (x_line, y_line, z_line, origin, pt_5, pt_6, pt_7, pt_8)
 
+		# return (x_line, y_line, z_line, origin)
 		return self.axis_2d
 
 	# groups points close to each other as the same finger, takes 
