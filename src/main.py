@@ -151,11 +151,11 @@ while(True):
         # self.axis[6] = (px[0], py[1], 0) #(3,3,0)
         # self.axis[7] = (px[0], py[1], -200) #(3,3,-3)
 
-            if time.time() - curr_time >= 2:
-                cv2.imwrite("img" + str(ct) + ".jpg", BGR_frame)
-                ct += 1
-                print "saved image"
-                curr_time = time.time()
+            # if time.time() - curr_time >= 2:
+            #     cv2.imwrite("img" + str(ct) + ".jpg", BGR_frame)
+            #     ct += 1
+            #     print "saved image"
+            #     curr_time = time.time()
 
         
         cv2.imshow('frame', BGR_frame)
